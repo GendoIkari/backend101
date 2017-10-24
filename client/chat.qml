@@ -1,5 +1,6 @@
 import QtQuick 2.7
 import QtQuick.Window 2.2
+import "httphelp.js" as Http
 
 Window {
     visible: true
@@ -10,13 +11,18 @@ Window {
     property var chatMessages: []
 
     function receiveMessages() {
-        console.log("UPDATE!")
+        Http.getJson("http://private-393e7-backend101.apiary-mock.com/v1/messages", function(json) {
+            chatMessages = json.messages
+        })
     }
 
     function sendMessage() {
-        console.log(message.text, "SENT!")
-
-        message.text = ""
+        Http.sendJson("http://private-393e7-backend101.apiary-mock.com/v1/messages", {
+            sender: "gendo",
+            content: message.text,
+        }, function(json) {
+            console.log(json)
+        })
     }
 
     Column {
