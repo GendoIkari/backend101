@@ -11,13 +11,13 @@ Window {
     property var chatMessages: []
 
     function receiveMessages() {
-        Http.getJson("http://private-393e7-backend101.apiary-mock.com/v1/messages", function(json) {
+        Http.getJson("http://localhost:5000/v1/messages", function(json) {
             chatMessages = json.messages
         })
     }
 
     function sendMessage() {
-        Http.sendJson("http://private-393e7-backend101.apiary-mock.com/v1/messages", {
+        Http.sendJson("http://localhost:5000/v1/messages", {
             sender: "gendo",
             content: message.text,
         }, function(json) {
