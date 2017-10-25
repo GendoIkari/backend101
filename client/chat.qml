@@ -1,13 +1,17 @@
 import QtQuick 2.7
 import QtQuick.Window 2.2
+import QtQuick.Controls 1.4
 import "httphelp.js" as Http
 
 Window {
+    id: root
     visible: true
     width: 640
     height: 480
     title: "Gendo's Chat"
 
+    property string username
+    property string password
     property var chatMessages: []
 
     function receiveMessages() {
@@ -16,79 +20,127 @@ Window {
         })
     }
 
-    function sendMessage() {
+    function sendMessage(textInput) {
         Http.sendJson("http://localhost:5000/v1/messages", {
             sender: "gendo",
-            content: message.text,
-        }, function(json) {
+            content: textInput.text,
+        }, root.username, root.password, function(json) {
             console.log(json)
         })
+        textInput.text = ""
     }
 
-    Column {
-        spacing: 5
+    StackView {
+        id: stack
+        anchors.fill: parent
 
-        Repeater {
-            model: chatMessages
-            delegate: Row {
-                spacing: 10
-                Text {
-                    text: modelData.sender
+        initialItem: loginView
+    }
+
+    Component {
+        id: loginView
+
+        Item {
+            Row {
+                spacing: 5
+                anchors.centerIn: parent
+
+                TextField {
+                    id: textUsername
                 }
-                Text {
-                    text: modelData.content
+
+                TextField {
+                    id: textPassword
+                }
+
+                Button {
+                    text: 'Login'
+                    onClicked: {
+                        root.username = textUsername.text
+                        root.password = textPassword.text
+
+                        Http.sendJson("http://localhost:5000/v1/users", {
+                            name: root.username,
+                            password: root.password,
+                        }, root.username, root.password, function(json) {
+                            stack.push(chatView)
+                        })
+                    }
                 }
             }
         }
     }
 
-    Rectangle {
-        width: 410
-        height: 25
-        border { width: 1; color: "black" }
-        anchors.left: parent.left
-        anchors.bottom: parent.bottom
-        anchors.margins: 10
+    Component {
+        id: chatView
 
-        TextInput {
-            id: message
-            anchors.fill: parent
+        Item {
+            Column {
+                spacing: 5
 
-            onAccepted: {
-                sendMessage()
+                Repeater {
+                    model: chatMessages
+                    delegate: Row {
+                        spacing: 10
+                        Text {
+                            text: modelData.sender
+                        }
+                        Text {
+                            text: modelData.content
+                        }
+                    }
+                }
             }
-        }
-    }
 
-    Rectangle {
-        width: 200
-        height: 25
-        color: "red"
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.margins: 10
+            Rectangle {
+                width: 410
+                height: 25
+                border { width: 1; color: "black" }
+                anchors.left: parent.left
+                anchors.bottom: parent.bottom
+                anchors.margins: 10
 
-        Text {
-            text: "Send Message"
-            anchors.centerIn: parent
-        }
+                TextInput {
+                    id: message
+                    anchors.fill: parent
 
-        MouseArea {
-            anchors.fill: parent
-
-            onClicked: {
-                sendMessage()
+                    onAccepted: {
+                        root.sendMessage(message)
+                    }
+                }
             }
-        }
-    }
 
-    Timer {
-        interval: 1000
-        running: true
-        repeat: true
+            Rectangle {
+                width: 200
+                height: 25
+                color: "red"
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.margins: 10
 
-        onTriggered: {
-            receiveMessages()
+                Text {
+                    text: "Send Message"
+                    anchors.centerIn: parent
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+
+                    onClicked: {
+                        root.sendMessage(message)
+                    }
+                }
+            }
+
+            Timer {
+                interval: 1000
+                running: true
+                repeat: true
+
+                onTriggered: {
+                    root.receiveMessages()
+                }
+            }
         }
     }
 }

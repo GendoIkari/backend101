@@ -1,9 +1,10 @@
-function sendJson(url, jsonText, callback) {
+function sendJson(url, jsonText, username, password, callback) {
     var json = JSON.stringify(jsonText)
     var http = new XMLHttpRequest()
 
     http.open("POST", url, true);
     http.setRequestHeader("Content-type", "application/json");
+    http.setRequestHeader('Authorization','Basic ' + Qt.btoa(username + ":" + password));
 
     http.onreadystatechange = function() {
         if (http.readyState == XMLHttpRequest.DONE) {
@@ -17,7 +18,6 @@ function sendJson(url, jsonText, callback) {
     }
 
     http.send(json);
-    message.text = ""
 }
 
 function getJson(url, callback) {
